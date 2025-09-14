@@ -13,7 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Modules //--
 
-local GarbageCollector = require(ReplicatedStorage.Packages.GarbageCollector)
+local GarbageCollector = require(ReplicatedStorage.Modules.Shared.Garbage.GarbageCollector)
 
 --// Types //--
 
@@ -21,12 +21,12 @@ local Types = require(script.Types)
 
 --// Variables //--
 
-local LoadedAnimations: { [Instance]: { [string]: LoadedAnimation } } = {}
+local LoadedAnimations: { [Instance]: { [string]: Types.LoadedAnimation } } = {}
 
-local AnimationModule: AnimationModule = {} :: any
+local AnimationModule: Types.AnimationModule = {} :: any
 AnimationModule.__index = AnimationModule
 
-local LoadedAnimation: LoadedAnimation = {} :: any
+local LoadedAnimation: Types.LoadedAnimation = {} :: any
 LoadedAnimation.__index = LoadedAnimation
 
 local Cashe: Folder = nil
@@ -58,7 +58,7 @@ function AnimationModule:Preload(AnimID: string, LoadKeyframes: boolean)
 end
 
 function AnimationModule.LoadAnimation(AnimationObject, AnimID, AnimName, AnimGroups, LoadKeyFrames)
-	local self: LoadedAnimation = setmetatable({}, LoadedAnimation) :: any
+	local self: Types.LoadedAnimation = setmetatable({}, LoadedAnimation) :: any
 
 	local TargetedAnimator: Animator
 
@@ -71,7 +71,7 @@ function AnimationModule.LoadAnimation(AnimationObject, AnimID, AnimName, AnimGr
 	local Animation: Animation
 
 	if Cashe:FindFirstChild(AnimID) then
-		Animation = Cashe[AnimID]
+		Animation = Cashe:FindFirstChild(AnimID) :: Animation
 	else
 		Animation = Instance.new("Animation")
 		Animation.AnimationId = AnimID
@@ -165,17 +165,17 @@ end
 
 function AnimationModule.StopAllLoadedAnimations(self, AnimationInstance, Fade: number)
 	if LoadedAnimations[AnimationInstance] then
-		for _, anim in pairs(LoadedAnimations[AnimationInstance]) do
-			anim:Stop(Fade or 0)
+		for _, Anim in LoadedAnimations[AnimationInstance] do
+			Anim:Stop(Fade or 0)
 		end
 	end
 end
 
 function AnimationModule.StopAllLoadedAnimationsExcept(self, AnimationInstance, Except: { string }, Fade: number)
 	if LoadedAnimations[AnimationInstance] then
-		for _, anim in pairs(LoadedAnimations[AnimationInstance]) do
-			if not table.find(Except, anim.AnimationName) then
-				anim:Stop(Fade or 0)
+		for _, Anim in LoadedAnimations[AnimationInstance] do
+			if not table.find(Except, Anim.AnimationName) then
+				Anim:Stop(Fade or 0)
 			end
 		end
 	end
@@ -188,16 +188,16 @@ function AnimationModule.StopAllLoadedAnimationsExceptGroups(
 	Fade: number
 )
 	if LoadedAnimations[AnimationInstance] then
-		for _, anim in pairs(LoadedAnimations[AnimationInstance]) do
-			local stopAnim = true
-			for _, exceptGroup in pairs(ExceptGroups) do
-				if table.find(anim.AnimationGroups, exceptGroup) then
-					stopAnim = false
+		for _, Anim in LoadedAnimations[AnimationInstance] do
+			local StopAnim = true
+			for _, ExceptGroup in ExceptGroups do
+				if table.find(Anim.AnimationGroups, ExceptGroup) then
+					StopAnim = false
 					break
 				end
 			end
-			if stopAnim then
-				anim:Stop(Fade or 0)
+			if StopAnim then
+				Anim:Stop(Fade or 0)
 			end
 		end
 	end
@@ -205,10 +205,10 @@ end
 
 function AnimationModule.StopAllLoadedAnimationsInGroups(self, AnimationInstance, Groups: { string }, Fade: number)
 	if LoadedAnimations[AnimationInstance] then
-		for _, anim in pairs(LoadedAnimations[AnimationInstance]) do
-			for _, group in pairs(Groups) do
-				if table.find(anim.AnimationGroups, group) then
-					anim:Stop(Fade or 0)
+		for _, Anim in LoadedAnimations[AnimationInstance] do
+			for _, Group in Groups do
+				if table.find(Anim.AnimationGroups, Group) then
+					Anim:Stop(Fade or 0)
 					break
 				end
 			end
@@ -217,38 +217,39 @@ function AnimationModule.StopAllLoadedAnimationsInGroups(self, AnimationInstance
 end
 
 function AnimationModule.FindAnimationEvents(self, AnimationID: string)
-	local events = {}
+	local Events = {}
 
-	local animation = Cashe:FindFirstChild(AnimationID)
-	if not animation then
-		animation = Instance.new("Animation")
-		animation.AnimationId = AnimationID
-		animation.Name = AnimationID
-		animation.Parent = Cashe
+	local Animation: Animation = Cashe:FindFirstChild(AnimationID) :: Animation
+
+	if not Animation then
+		Animation = Instance.new("Animation")
+		Animation.AnimationId = AnimationID
+		Animation.Name = AnimationID
+		Animation.Parent = Cashe
 	end
 
-	if not animation:FindFirstChild("KeyframeSequence") then
-		local keyframes = KeyframeSequenceProvider:GetKeyframeSequenceAsync(AnimationID)
-		keyframes.Name = "KeyframeSequence"
-		keyframes.Parent = animation
+	if not Animation:FindFirstChild("KeyframeSequence") then
+		local Keyframes = KeyframeSequenceProvider:GetKeyframeSequenceAsync(AnimationID)
+		Keyframes.Name = "KeyframeSequence"
+		Keyframes.Parent = Animation
 	end
 
-	local keyframeSequence = animation:FindFirstChild("KeyframeSequence")
-	if keyframeSequence then
-		for _, marker in pairs(keyframeSequence:GetDescendants()) do
-			if marker:IsA("KeyframeMarker") then
-				events[marker.Name] = marker.Parent.Time
+	local KeyframeSequence = Animation:FindFirstChild("KeyframeSequence")
+	if KeyframeSequence then
+		for _, Marker in (KeyframeSequence:GetDescendants()) do
+			if Marker:IsA("KeyframeMarker") then
+				Events[Marker.Name] = Marker.Parent.Time
 			end
 		end
 	end
 
-	return events
+	return Events
 end
 
 function AnimationModule.ClearLoadedAnimationsInGroups(self, AnimationInstance, Groups: { string })
 	if LoadedAnimations[AnimationInstance] then
-		for _, anim in pairs(LoadedAnimations[AnimationInstance]) do
-			for _, group in pairs(Groups) do
+		for _, anim in (LoadedAnimations[AnimationInstance]) do
+			for _, group in (Groups) do
 				if table.find(anim.AnimationGroups, group) then
 					anim:Unload()
 					break
