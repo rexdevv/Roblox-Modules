@@ -9,9 +9,11 @@ local HttpService = game:GetService("HttpService")
 local KeyframeSequenceProvider = game:GetService("KeyframeSequenceProvider")
 local ContentProvider = game:GetService("ContentProvider")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 --// Modules //--
 
-local GarbageCollector = require(script.Parent.Packages.GarbageCollector)
+local GarbageCollector = require(ReplicatedStorage.Packages.GarbageCollector)
 
 --// Types //--
 
