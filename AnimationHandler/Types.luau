@@ -236,7 +236,7 @@ function AnimationModule.FindAnimationEvents(self, AnimationID: string)
 
 	local KeyframeSequence = Animation:FindFirstChild("KeyframeSequence")
 	if KeyframeSequence then
-		for _, Marker in pairs(KeyframeSequence:GetDescendants()) do
+		for _, Marker in (KeyframeSequence:GetDescendants()) do
 			if Marker:IsA("KeyframeMarker") then
 				Events[Marker.Name] = Marker.Parent.Time
 			end
@@ -248,8 +248,8 @@ end
 
 function AnimationModule.ClearLoadedAnimationsInGroups(self, AnimationInstance, Groups: { string })
 	if LoadedAnimations[AnimationInstance] then
-		for _, anim in pairs(LoadedAnimations[AnimationInstance]) do
-			for _, group in pairs(Groups) do
+		for _, anim in (LoadedAnimations[AnimationInstance]) do
+			for _, group in (Groups) do
 				if table.find(anim.AnimationGroups, group) then
 					anim:Unload()
 					break
